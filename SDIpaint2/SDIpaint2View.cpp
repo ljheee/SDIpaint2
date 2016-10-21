@@ -26,6 +26,8 @@ BEGIN_MESSAGE_MAP(CSDIpaint2View, CView)
 	ON_COMMAND(ID_FILE_PRINT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CView::OnFilePrintPreview)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
 END_MESSAGE_MAP()
 
 // CSDIpaint2View 构造/析构
@@ -49,8 +51,7 @@ BOOL CSDIpaint2View::PreCreateWindow(CREATESTRUCT& cs)
 }
 
 // CSDIpaint2View 绘制
-
-void CSDIpaint2View::OnDraw(CDC* /*pDC*/)
+void CSDIpaint2View::OnDraw(CDC* pDC)
 {
 	CSDIpaint2Doc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
@@ -58,6 +59,18 @@ void CSDIpaint2View::OnDraw(CDC* /*pDC*/)
 		return;
 
 	// TODO:  在此处为本机数据添加绘制代码
+	CRect rectClient;
+	GetClientRect(rectClient);
+	pDC->SetMapMode(MM_ANISOTROPIC);//设置坐标映射模式
+	pDC->SetWindowExt(1000,1000);//设置窗口范围
+
+	//设置视口范围
+	pDC->SetViewportExt(rectClient.right,-rectClient.bottom);
+	pDC->SetViewportOrg(rectClient.right / 2, rectClient.bottom/2);
+
+	pDC->Ellipse(CRect(-500,-500,500,500));//绘制椭圆
+
+
 }
 
 
@@ -102,3 +115,26 @@ CSDIpaint2Doc* CSDIpaint2View::GetDocument() const // 非调试版本是内联的
 
 
 // CSDIpaint2View 消息处理程序
+CPoint org;//鼠标按下点
+
+//left鼠标按下
+void CSDIpaint2View::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+	org = point;
+	CView::OnLButtonDown(nFlags, point);
+}
+
+//left鼠标抬起
+void CSDIpaint2View::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	// TODO:  在此添加消息处理程序代码和/或调用默认值
+
+	CDC* pDC = GetDC();
+	pDC->MoveTo(org);
+	pDC->LineTo(point);
+	CView::OnLButtonUp(nFlags, point);
+
+
+	ReleaseDC(pDC);
+}
